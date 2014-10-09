@@ -9,6 +9,11 @@ import java.util.Scanner;
 
 class Server extends Thread{
 
+    public static final XMLParser xmlParser = new XMLParser("files/ServerDescription.xml");
+
+    public static final int MAX_NUMBER_OF_USERS = Integer.parseInt(xmlParser.getValue("max_number_of_users"));
+    public static final int SERVER_PORT = Integer.parseInt(xmlParser.getValue("server_port"));
+
     private Socket s;
     private User user;
     private volatile static List<User> userList = new ArrayList<User>();
@@ -18,23 +23,25 @@ class Server extends Thread{
     public static void main(String[] args) {
         try{
             int i = 0; // счетчик подключений
-            ServerSocket server = new ServerSocket(1234);// слушаем порт 1234
+            ServerSocket server = new ServerSocket(SERVER_PORT);// слушаем порт 1234
             Socket socket;
             while(true) {
 
                 socket = server.accept();
-                if (getNumberOfUsers() < 2) {
+                if (getNumberOfUsers() < MAX_NUMBER_OF_USERS) {
                     String name;
 
                     System.out.println("Trying to connect");
-//                if (getNumberOfUsers() >= 2){
-//                    say(socket, "Sorry, too many users connected");
-//                    socket.close();
-//                    break;
-//                }
+                    (new BufferedReader(new InputStreamReader(socket.getInputStream()))).readLine();
                     while (true) {
                         name = (new BufferedReader(new InputStreamReader(socket.getInputStream()))).readLine();
-                        name = name.substring(4); //todo fix
+                        if (!checkUserNamePassword(name)){
+                            say(socket,"Wrong password, try again.");
+                            say(socket,"Enter your name:");
+                            continue;
+                        }else {
+                            name = name.substring(0,name.indexOf(":"));
+                        }
                         if (checkName(name)) {
                             say(socket, "OK");
                             break;
@@ -42,11 +49,6 @@ class Server extends Thread{
                             say(socket, "This name is already taken. Try another:");
                         }
                     }
-//                if (getNumberOfUsers() >= 2){
-//                    say(socket, "Sorry, too many users connected");
-//                    socket.close();
-//                    break;
-//                }
                     i++;
                     new Server(getNewUser(name, socket), socket, name);
                     if (messageKeeper.getMessages() != null) {
@@ -87,11 +89,10 @@ class Server extends Thread{
     public void run(){
         try{
             BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-//            ObjectInputStream oin = new ObjectInputStream(s.getInputStream());
             String input;
             Message message;
-            while (/*(input = in.readLine()) != null  */ (message = (Message)(oin).readObject())!=null) {
-//                Message msg = (Message)(oin.readObject());
+            while ((message = (Message)(oin).readObject())!=null) {
+
                 input = message.getMessage();
 
                 if (input.equalsIgnoreCase("exit")) {
@@ -104,20 +105,17 @@ class Server extends Thread{
                 } else {
                     messageKeeper.add(user.getName() + " : " + input);
                     say(input, user.getName());
-//                System.out.println(input);
-//                     oin = new ObjectInputStream(s.getInputStream());
                 }
             }
-//            closePrintWriters();
             in.close();
-            s.close();//todo?
+            s.close();
         } catch(Exception e){
             e.printStackTrace();
         }
     }
 
     private static synchronized void say(String message, String name){
-        for (User user: userList){    //todo
+        for (User user: userList){
             try {
                 Socket socket = user.getSocket();
                 PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
@@ -182,5 +180,14 @@ class Server extends Thread{
             }
         }
         return true;
+    }
+
+    private static boolean checkUserNamePassword(String userPass){
+        List<String> pass = xmlParser.getPasswordUser();
+        for (String s: pass){
+            if (s.equals(userPass))
+                return true;
+        }
+        return false;
     }
 }

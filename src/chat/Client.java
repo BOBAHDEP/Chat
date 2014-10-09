@@ -38,6 +38,7 @@ class Client extends Thread{
             client.setPriority(NORM_PRIORITY);
             client.start();
             System.out.print("Please enter your name:");
+            client.out.println("");
             while (!client.validate ) {
                 client.out.println(getUserName());
                 Thread.sleep(1000);
@@ -48,22 +49,13 @@ class Client extends Thread{
                 if ((client.fuser = client.inu.readLine()) != null) {
 
                     Message message = new Message(client.getName(), client.fuser,"Ok");
-//                    client.oos = new ObjectOutputStream(client.clientSocket.getOutputStream());
                     client.oos.writeObject(message);
                     client.oos.flush();
-//                    client.out.println(client.fuser);
-//                    if (client.fuser.equalsIgnoreCase("close")) {
-//                        client.disconnected = true;
-//                        client.out.println("exit");
-//                        System.out.println("Disconnected");
-//                        break;
-//                    }
                     if (client.fuser.equalsIgnoreCase("exit")) {
                         client.disconnected = true;
                         System.out.println("Disconnected");
                         break;
                     }
-//                    client.oos = new ObjectOutputStream(client.clientSocket.getOutputStream());
                 }
             }
             client.out.close();
@@ -104,7 +96,8 @@ class Client extends Thread{
     private static String getUserName(){
 
         Scanner in = new Scanner(System.in);
-        return in.next();
-
+        String res = in.next();
+        System.out.print("Please enter password:");
+        return res+":"+in.next();
     }
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server>
+    <server_port>1234</server_port>
+    <max_number_of_users>2</max_number_of_users>
+    <user name = "BoBa" password = "123"/>
+    <user name = "1" password = "123"/>
+    <user name = "2" password = "123"/>
+    <user name = "3" password = "123"/>
+    <user name = "4" password = "123"/>
+    <user name = "5" password = "123"/>
+    <user name = "6" password = "123"/>
+</server>
